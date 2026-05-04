@@ -3,6 +3,20 @@
 A conversational AI travel planning assistant built with Gradio, powered by an OpenAI-compatible LLM and three specialized services.
  
 ---
+
+## Implementation Decisions
+ 
+**agent_framework over LangChain:** I used the `agent_framework` library for its simplicity. It provides a clean async context manager interface and native MCP support, which was sufficient for all assignment requirements. Please use `uv pip install agent-framework-core agent-framework-openai` to be able to run the chat interface.
+ 
+**FastAPI for the weather service:** Wrapping the weather logic in FastAPI decouples it from the agent and makes it independently testable via `/docs`. It also allows the service to be called by other components without importing Python modules directly.
+ 
+**File-persisted ChromaDB over Docker:** The `chromadb.PersistentClient` approach was chosen so the index can be committed to the repository and loaded at runtime without any setup steps. The pre-built index is included in `embeddings/chroma_db/`.
+ 
+**Parallel HTTP requests for climate averages:** Fetching 5 years of historical weather data sequentially was too slow (~10s). `ThreadPoolExecutor` reduced this to the latency of a single request.
+ 
+**Two-layer guardrails:** Input is checked with regex before reaching the agent (fast, no API cost). Output is checked after the agent responds to catch any accidental prompt leakage or persona hijacking.
+ 
+---
  
 ## Chat Client
  
@@ -45,20 +59,6 @@ A [FastMCP](https://github.com/jlowin/fastmcp) server exposing three function-ca
 | `time_zone_differences` | Returns current local times and hour offset between two IANA timezones |
  
 The agent connects to this server via `MCPStreamableHTTPTool` and selects tools autonomously based on user intent.
- 
----
- 
-## Implementation Decisions
- 
-**agent_framework over LangChain:** I used the `agent_framework` library was used for its simplicity. It provides a clean async context manager interface and native MCP support, which was sufficient for all assignment requirements.
- 
-**FastAPI for the weather service:** Wrapping the weather logic in FastAPI decouples it from the agent and makes it independently testable via `/docs`. It also allows the service to be called by other components without importing Python modules directly.
- 
-**File-persisted ChromaDB over Docker:** The `chromadb.PersistentClient` approach was chosen so the index can be committed to the repository and loaded at runtime without any setup steps. The pre-built index is included in `embeddings/chroma_db/`.
- 
-**Parallel HTTP requests for climate averages:** Fetching 5 years of historical weather data sequentially was too slow (~10s). `ThreadPoolExecutor` reduced this to the latency of a single request.
- 
-**Two-layer guardrails:** Input is checked with regex before reaching the agent (fast, no API cost). Output is checked after the agent responds to catch any accidental prompt leakage or persona hijacking.
  
 ---
  
