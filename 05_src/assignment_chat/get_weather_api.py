@@ -186,7 +186,7 @@ def provide_travel_weather_details(city: str = Query(..., description="Destinati
                                    travel_date: date = Query(..., description="Travel date in YYYY-MM-DD format")):
     
     
-    client = get_client(dev=True)
+    client = get_client(dev=False)
     
     system_prompt = """You are a weather assistant providing travellers weather details for the place you are visiting. 
                         Use only the weather json input and no external information to generate a message that can be returned to the traveller.
